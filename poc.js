@@ -259,6 +259,7 @@ function shiftBlock(id, direction) {
 
 function shuffleBoard() {}
 
+// TODO: Fix shifting issue not working as intended.
 placeBlock("horizontal_2", [3, 2]);
 placeBlock("meme", [1, 0]);
 console.log(`Can shift 1 down? ${shiftBlock(1, [1, 0])}`);
