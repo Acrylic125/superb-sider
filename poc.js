@@ -69,12 +69,20 @@ function showBoard() {
  * @param {[number, number]} pos [row, col]
  */
 function placeBlock(type, pos) {
-  const pieceDimension = PieceType[type];
-  const [row, col] = pos;
-
   const id = idCounter++;
   pieces.set(id, { startPos: toPos(pos[0], pos[1]), type });
+  placeBlockOnBoard(id, type, pos);
+}
 
+/**
+ *
+ * @param {number} id
+ * @param {keyof PieceType} type
+ * @param {[number, number]} pos [row, col]
+ */
+function placeBlockOnBoard(id, type, pos) {
+  const pieceDimension = PieceType[type];
+  const [row, col] = pos;
   for (let r = 0; r < pieceDimension.length; r++) {
     for (let c = 0; c < pieceDimension[r].length; c++) {
       if (pieceDimension[r][c] === 1) {
@@ -88,10 +96,24 @@ function placeBlock(type, pos) {
   }
 }
 
-function removeBlock(id) {
+/**
+ *
+ * @param {number} id
+ * @param {[number, number]} pos [row, col]
+ */
+function updateBlock(id, pos) {
+  removeBlockFromBoard(id, false);
+  const piece = pieces.get(id);
+  const type = piece.type;
+  pieces.set(id, { startPos: toPos(pos[0], pos[1]), type });
+  placeBlockOnBoard(id, type, pos);
+}
+
+function removeBlockFromBoard(id, mustExist = true) {
   const piece = pieces.get(id);
   if (!piece) {
-    throw new Error(`No piece with id ${id}`);
+    if (mustExist) throw new Error(`No piece with id ${id}`);
+    return false;
   }
   const [row, col] = toRowCol(piece.startPos);
   const pieceDimension = PieceType[piece.type];
@@ -106,6 +128,12 @@ function removeBlock(id) {
       }
     }
   }
+  return true;
+}
+
+function removeBlock(id) {
+  removeBlockFromBoard(id);
+  pieces.delete(id);
 }
 
 /**
@@ -219,14 +247,22 @@ function shiftBlock(id, direction) {
   if (!piece) {
     throw new Error(`No piece with id ${id}`);
   }
+
+  if (!canMove(PieceType[piece.type], toRowCol(piece.startPos), direction)) {
+    return false;
+  }
+  const [rowDelta, colDelta] = direction;
   const [row, col] = toRowCol(piece.startPos);
-  const pieceDimension = PieceType[piece.type];
+  updateBlock(id, [row + rowDelta, col + colDelta]);
+  return true;
 }
 
 function shuffleBoard() {}
 
 placeBlock("horizontal_2", [3, 2]);
 placeBlock("meme", [1, 0]);
+console.log(`Can shift 1 down? ${shiftBlock(1, [1, 0])}`);
+// removeBlock(2);
 // placeBlock("end_piece", [1, 1]);
 console.log(canMove(PieceType["meme"], [1, 0], [1, 0]));
 // removeBlock(1);
